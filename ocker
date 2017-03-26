@@ -1,0 +1,59 @@
+#! /bin/sh
+
+set -e
+set -u
+
+iso=install60.iso
+imgsz=10G
+autoinstall=install.conf
+postinstall=postinstall.sh
+output=out.img
+
+tmp=`mktemp -d`
+
+cleanup() {
+	rm -rf $tmp
+}
+
+trap cleanup EXIT INT
+
+cp $iso $tmp/install.iso
+cp $autoinstall $tmp/autoinstall.conf
+cp $postinstall $tmp/postinstall.sh
+echo 'set tty com0' > $tmp/boot.conf
+
+growisofs -M "$tmp/install.iso" -l -R -graft-points \
+  /autoinstall.conf="$tmp/autoinstall.conf" \
+  /postinstall.sh="$tmp/postinstall.sh" \
+  /etc/boot.conf="$tmp/boot.conf"
+
+qemu-img create -f raw $output $imgsz
+
+expect <<EOF
+set timeout 600
+
+spawn qemu-system-x86_64 -nographic \
+  -drive if=virtio,file=$output,format=raw -cdrom "$tmp/install.iso" \
+  -net nic,model=virtio -net user -boot once=d
+
+expect timeout { exit 1 } "\(I\)nstall, \(U\)pgrade, \(A\)utoinstall or \(S\)hell\?"
+send "S\n"
+
+expect timeout { exit 1 } "# "
+send "mount /dev/cd0c /mnt\n"
+send "cp /mnt/autoinstall.conf /\n"
+send "umount /mnt\n"
+
+send "install -af /autoinstall.conf && reboot\n"
+expect timeout { exit 1 } "login:"
+send "root\n"
+expect timeout { exit 1 } "Password:"
+send "root\n"
+
+expect timeout { exit 1 } "# "
+send "mount /dev/cd0c /mnt\n"
+send "sh /mnt/postinstall.sh ; echo OCKERPOST=\$?\n"
+expect timeout { exit 1 } "OCKERPOST=0"
+send "halt -p\n"
+expect timeout { exit 1 } eof
+EOF
