@@ -3,11 +3,68 @@
 set -e
 set -u
 
-iso=install60.iso
-imgsz=10G
-autoinstall=install.conf
-postinstall=postinstall.sh
-output=out.img
+iso=""
+imagesize=""
+autoinstall=""
+output=""
+
+set +u
+
+while true 
+do
+	if test -z $1
+	then
+		break
+	fi
+	
+	if test -z $2
+	then
+		echo "expected argument after flag"
+		exit 1
+	fi
+	
+	case $1 in
+		-iso)
+			iso=$2
+		;;
+		-imagesize)
+			imagesize=$2
+		;;
+		-autoinstall)
+			autoinstall=$2
+		;;
+		-output)
+			output=$2
+		;;
+		*)
+			echo "invalid argument $1"
+			exit 1
+		;;
+	esac
+	
+	shift
+	shift
+done
+
+set -u
+
+if test -z $iso
+then
+	echo "please set -iso"
+	exit 1
+fi
+
+if test -z $imagesize
+then
+	echo "please set -imagesize"
+	exit 1
+fi
+
+if test -z $autoinstall
+then
+	echo "please set -autoinstall"
+	exit 1
+fi
 
 tmp=`mktemp -d`
 
@@ -19,15 +76,13 @@ trap cleanup EXIT INT
 
 cp $iso $tmp/install.iso
 cp $autoinstall $tmp/autoinstall.conf
-cp $postinstall $tmp/postinstall.sh
 echo 'set tty com0' > $tmp/boot.conf
 
 growisofs -M "$tmp/install.iso" -l -R -graft-points \
   /autoinstall.conf="$tmp/autoinstall.conf" \
-  /postinstall.sh="$tmp/postinstall.sh" \
   /etc/boot.conf="$tmp/boot.conf"
 
-qemu-img create -f raw $output $imgsz
+qemu-img create -f raw $output $imagesize
 
 expect <<EOF
 set timeout 600
@@ -43,17 +98,10 @@ expect timeout { exit 1 } "# "
 send "mount /dev/cd0c /mnt\n"
 send "cp /mnt/autoinstall.conf /\n"
 send "umount /mnt\n"
-
-send "install -af /autoinstall.conf && reboot\n"
-expect timeout { exit 1 } "login:"
-send "root\n"
-expect timeout { exit 1 } "Password:"
-send "root\n"
-
+send "install -af /autoinstall.conf\n"
+expect timeout { exit 1 } "CONGRATULATIONS"
 expect timeout { exit 1 } "# "
-send "mount /dev/cd0c /mnt\n"
-send "sh /mnt/postinstall.sh ; echo OCKERPOST=\$?\n"
-expect timeout { exit 1 } "OCKERPOST=0"
 send "halt -p\n"
-expect timeout { exit 1 } eof
+expect timeout { exit 1 } "The operating system has halted"
 EOF
+

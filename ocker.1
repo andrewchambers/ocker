@@ -1,0 +1,36 @@
+.Dd $Mdocdate: March 27 2017 $
+.Dt OCKER 1
+.Os
+.Sh NAME
+.Nm ocker
+.Nd generate openbsd vm images from an iso and install.conf
+.Sh SYNOPSIS
+.Nm encr
+.Op Fl iso Ar iso
+.Op Fl imagesize Ar size
+.Op Fl autoinstall Ar install.conf
+.Op Fl postinstall Ar postinstall.sh
+.Op Fl output Ar out.img
+.Sh DESCRIPTION
+.Nm
+uses qemu and expect to install openbsd from
+.Ar iso
+onto an image
+.Ar output
+of size
+.Ar imagesize
+.Nm
+takes an openbsd install.conf file
+.Ar autoinstall
+.Pp
+.Ar imagesize
+takes the same size specification as the qemu-img command.
+.Pp
+.Sh EXIT STATUS
+.Ex -std ocker
+.Sh EXAMPLE
+.Bd -literal
+
+ocker -iso install60.iso -imagesize 10G -autoinstall install.conf -output openbsd.img
+
+.Ed
