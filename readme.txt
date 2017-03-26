@@ -5,7 +5,7 @@ NAME
 
 SYNOPSIS
      encr [-iso iso] [-imagesize size] [-autoinstall install.conf]
-          [-postinstall postinstall.sh] [-output out.img]
+          [-output out.img]
 
 DESCRIPTION
      ocker uses qemu and expect to install openbsd from iso onto an image
