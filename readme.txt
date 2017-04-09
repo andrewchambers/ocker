@@ -21,4 +21,4 @@ EXAMPLE
      ocker -iso install60.iso -imagesize 10G -autoinstall install.conf -output openbsd.img
 
 
-BSD                             March 27, 2017                             BSD
+BSD                              April 9, 2017                             BSD
