@@ -4,8 +4,8 @@ NAME
      ocker — generate openbsd vm images from an iso and install.conf
 
 SYNOPSIS
-     encr [-iso iso] [-imagesize size] [-autoinstall install.conf]
-          [-output out.img]
+     ocker [-iso iso] [-imagesize size] [-autoinstall install.conf]
+           [-output out.img]
 
 DESCRIPTION
      ocker uses qemu and expect to install openbsd from iso onto an image
