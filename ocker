@@ -89,7 +89,7 @@ set timeout 600
 
 spawn qemu-system-x86_64 -nographic \
   -drive if=virtio,file=$output,format=raw -cdrom "$tmp/install.iso" \
-  -net nic,model=virtio -net user -boot once=d
+  -net nic,model=virtio -net user -boot once=d -smp 2 -m 2048
 
 expect timeout { exit 1 } "\(I\)nstall, \(U\)pgrade, \(A\)utoinstall or \(S\)hell\?"
 send "S\n"
